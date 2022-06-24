@@ -16,6 +16,7 @@ app = Flask(__name__)
 auth = HTTPBasicAuth()
 
 db_connect = create_engine( 'mysql+pymysql://root:Netflix@123@localhost/sakila' )
+conn = db_connect.connect()
 
 sakila_args = reqparse.RequestParser()
 sakila_args.add_argument( "id", type=str )
@@ -24,9 +25,10 @@ sakila_args.add_argument( "id", type=str )
 
 @auth.get_password
 def get_password( username ):
-   if username == 'Aditya':
-      return 'Netflix@123'
-   return None
+   query = conn.execute( """select password  from creds where username = %s""", username )
+
+   for result in query:
+       return( result[0] )
 
 
 
@@ -40,6 +42,10 @@ def unauthorized():
 
     response = original_flask_make_response( jsonify( message=payload ), 401 )
     return response
+
+
+
+#=========================================
 
 
 
@@ -60,7 +66,7 @@ def get_category_by_id():
         response = original_flask_make_response( jsonify(message=payload), 400 )
         abort( response )
 
-    conn = db_connect.connect()
+
 
     if conn is None:
         payload = {
@@ -102,7 +108,7 @@ def get_all_categories():
 
     print('abc')
 
-    conn = db_connect.connect()
+
 
     if conn is None:
         payload = {
@@ -165,7 +171,7 @@ def post_category_info():
             "message": "request is not proper"
         }
 
-        response = original_flask_make_response(jsonify(message=payload), 400)
+        response = original_flask_make_response( jsonify(message=payload), 400 )
         abort(response)
 
     if( ( args["category_id"] is None ) or ( args["name"] is None ) or ( args["free"] is None ) ):
@@ -192,9 +198,7 @@ def post_category_info():
 
 
 
-
-
-
+#=========================================
 
 
 
